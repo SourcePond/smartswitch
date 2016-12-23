@@ -20,7 +20,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.sourcepond.commons</groupId>
-    <artifactId>failsafeservice</artifactId>
+    <artifactId>smartswitch</artifactId>
     <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
     <modules>
