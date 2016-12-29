@@ -8,14 +8,15 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.commons.failsafeservice.api;
+package ch.sourcepond.commons.smartswitch.api;
 
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Created by rolandhauser on 22.12.16.
+ * Factory to create a smart-switch between a regular OSGi service and a fallback service if the former service
+ * is not available.
  */
 public interface SmartSwitchFactory {
 
@@ -38,7 +39,6 @@ public interface SmartSwitchFactory {
          *
          * @param pSupplier Supplier object, must not be {@code null}
          * @return ProxyFactory used to configure smart switch fluently, never {@code null}
-         *
          * @throws NullPointerException Thrown, if the supplier specified is {@code null}
          */
         ProxyFactory<T> isUnavailableThenUse(Supplier<T> pSupplier);
@@ -50,15 +50,14 @@ public interface SmartSwitchFactory {
      *
      * @param <T> The service type
      */
-    interface FilteredFallbackSupplierRegistrar<T> extends FallbackSupplierRegistrar<T>  {
+    interface FilteredFallbackSupplierRegistrar<T> extends FallbackSupplierRegistrar<T> {
 
         /**
          * Registers the OSGi service filter to be used for OSGi service matching.
          *
          * @param pFilter Valid OSGi service filter, must be not {@code null}
          * @return FallbackSupplierRegistrar object used to configure smart switch fluently, never {@code null}
-         *
-         * @throws NullPointerException Thrown, if the filter specified is {@code null}
+         * @throws NullPointerException     Thrown, if the filter specified is {@code null}
          * @throws IllegalArgumentException Thrown, if the filter specified is not a valid OSGi service filter
          */
         FallbackSupplierRegistrar<T> withFilter(String pFilter);
@@ -70,8 +69,10 @@ public interface SmartSwitchFactory {
      * transparently switch between an OSGi service or a fallback service when the OSGi service is not available.
      *
      * @param pInterface The service interface, must not be {@code null}
-     * @param <T> The service type
+     * @param <T>        The service type
      * @return FilteredFallbackSupplierRegistrar object used to configure smart switch fluently, never {@code null}
+     * @throws NullPointerException Thrown, if the class specified is {@code null}
+     * @throws IllegalArgumentException Thrown, if the class specified is not an interface.
      */
     <T> FilteredFallbackSupplierRegistrar<T> whenService(Class<T> pInterface);
 }

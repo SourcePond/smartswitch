@@ -1,4 +1,4 @@
-import ch.sourcepond.commons.failsafeservice.api.SmartSwitchFactory;
+import ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
