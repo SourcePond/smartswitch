@@ -30,6 +30,7 @@
         <module>smartswitch-tests</module>
     </modules>
 
+
     <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
     <url>https://sourcepond.github.io/${repo.project}</url>
 
