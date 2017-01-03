@@ -21,12 +21,34 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.sourcepond.commons</groupId>
     <artifactId>smartswitch</artifactId>
+    <inceptionYear>2017</inceptionYear>
     <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
     <modules>
         <module>smartswitch-api</module>
         <module>smartswitch-impl</module>
+        <module>smartswitch-tests</module>
     </modules>
 
+    <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
+    <url>https://sourcepond.github.io/${repo.project}</url>
 
+    <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
+    <scm>
+        <url>https://${repo.domain}/${repo.path}</url>
+        <connection>scm:git:${project.scm.url}.git</connection>
+        <developerConnection>scm:git:ssh://git@${repo.domain}/${repo.path}.git</developerConnection>
+    </scm>
+
+    <ciManagement>
+        <url>${jenkins.baseurl}/job/${project.artifactId}</url>
+        <system>Jenkins</system>
+    </ciManagement>
+
+    <distributionManagement>
+        <site>
+            <id>www.sourcepond.ch</id>
+            <url>${site.distribution.url}/${project.groupId}/${project.artifactId}/${project.version}/</url>
+        </site>
+    </distributionManagement>
 </project>
