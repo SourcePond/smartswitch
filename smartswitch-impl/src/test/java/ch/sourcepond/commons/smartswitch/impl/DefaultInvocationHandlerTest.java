@@ -1,6 +1,5 @@
 package ch.sourcepond.commons.smartswitch.impl;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.*;
@@ -15,7 +14,8 @@ import static org.mockito.Mockito.*;
 /**
  * Created by rolandhauser on 29.12.16.
  */
-public class SmartSwitchTest {
+@SuppressWarnings("unchecked")
+public class DefaultInvocationHandlerTest {
     private final Bundle bundle = mock(Bundle.class);
     private final BundleContext context = mock(BundleContext.class);
     private final ServiceReference<ExecutorService> serviceReference = mock(ServiceReference.class);
@@ -25,10 +25,10 @@ public class SmartSwitchTest {
     private final ExecutorService secondService = mock(ExecutorService.class);
     private final Supplier<ExecutorService> supplier = mock(Supplier.class);
     private final Consumer<ExecutorService> serviceAvailableHook = mock(Consumer.class);
-    private final SmartSwitch<ExecutorService> smartSwitch = new SmartSwitch<>(supplier, serviceAvailableHook);
+    private final DefaultInvocationHandler<ExecutorService> defaultInvocationHandler = new DefaultInvocationHandler<>(supplier, serviceAvailableHook);
 
     private ExecutorService createProxy() {
-        return (ExecutorService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{ExecutorService.class}, smartSwitch);
+        return (ExecutorService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{ExecutorService.class}, defaultInvocationHandler);
     }
 
     @Before
@@ -41,7 +41,7 @@ public class SmartSwitchTest {
     @Test
     public void initService_NoMatchingServiceAvailable() {
         when(supplier.get()).thenReturn(defaultService);
-        smartSwitch.initService(null);
+        defaultInvocationHandler.initService(null);
         createProxy().shutdown();
         verify(defaultService).shutdown();
     }
@@ -49,7 +49,7 @@ public class SmartSwitchTest {
     @Test
     public void initService_MatchingReferenceFoundButServiceDegistered() {
         when(supplier.get()).thenReturn(defaultService);
-        smartSwitch.initService(serviceReference);
+        defaultInvocationHandler.initService(serviceReference);
         createProxy().shutdown();
         verify(defaultService).shutdown();
     }
@@ -57,7 +57,7 @@ public class SmartSwitchTest {
     @Test
     public void initService_MatchingServiceFound() {
         when(context.getService(serviceReference)).thenReturn(service);
-        smartSwitch.initService(serviceReference);
+        defaultInvocationHandler.initService(serviceReference);
         createProxy().shutdown();
         verify(service).shutdown();
     }
@@ -69,7 +69,7 @@ public class SmartSwitchTest {
 
         when(context.getService(secondServiceReference)).thenReturn(secondService);
         final ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, secondServiceReference);
-        smartSwitch.serviceChanged(event);
+        defaultInvocationHandler.serviceChanged(event);
 
         // The hook should be called because the previous service is
         // a default service.
@@ -86,7 +86,7 @@ public class SmartSwitchTest {
         when(secondServiceReference.getProperty(Constants.SERVICE_RANKING)).thenReturn("IllegalValue");
         when(context.getService(secondServiceReference)).thenReturn(secondService);
         final ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, secondServiceReference);
-        smartSwitch.serviceChanged(event);
+        defaultInvocationHandler.serviceChanged(event);
 
         // The hook should be called because the previous service is
         // a default service.
@@ -102,7 +102,7 @@ public class SmartSwitchTest {
 
         when(context.getService(secondServiceReference)).thenReturn(secondService);
         final ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, secondServiceReference);
-        smartSwitch.serviceChanged(event);
+        defaultInvocationHandler.serviceChanged(event);
 
         // The hook should never be called because the previous service is
         // an OSGi service as well.
@@ -119,7 +119,7 @@ public class SmartSwitchTest {
         when(secondServiceReference.getProperty(Constants.SERVICE_RANKING)).thenReturn("IllegalValue");
         when(context.getService(secondServiceReference)).thenReturn(secondService);
         final ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, secondServiceReference);
-        smartSwitch.serviceChanged(event);
+        defaultInvocationHandler.serviceChanged(event);
 
         // The hook should never be called because the previous service is
         // an OSGi service as well.
@@ -131,7 +131,7 @@ public class SmartSwitchTest {
     @Test
     public void serviceUnregistered_NotInterested() {
         initService_MatchingServiceFound();
-        smartSwitch.serviceChanged(new ServiceEvent(ServiceEvent.UNREGISTERING, secondServiceReference));
+        defaultInvocationHandler.serviceChanged(new ServiceEvent(ServiceEvent.UNREGISTERING, secondServiceReference));
 
         // Should be still the previous service
         createProxy().shutdown();
@@ -142,7 +142,7 @@ public class SmartSwitchTest {
     public void serviceUnregistered() {
         when(supplier.get()).thenReturn(defaultService);
         initService_MatchingServiceFound();
-        smartSwitch.serviceChanged(new ServiceEvent(ServiceEvent.UNREGISTERING, serviceReference));
+        defaultInvocationHandler.serviceChanged(new ServiceEvent(ServiceEvent.UNREGISTERING, serviceReference));
 
         // Should be still the previous service
         createProxy().shutdown();

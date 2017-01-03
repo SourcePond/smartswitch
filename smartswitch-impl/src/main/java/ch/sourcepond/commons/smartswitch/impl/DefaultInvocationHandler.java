@@ -1,6 +1,19 @@
+/*Copyright (C) 2017 Roland Hauser, <sourcepond@gmail.com>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.impl;
 
-import org.osgi.framework.*;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -11,24 +24,24 @@ import java.util.function.Supplier;
 /**
  * Created by rolandhauser on 23.12.16.
  */
-final class SmartSwitch<T> implements InvocationHandler, ServiceListener {
-    private volatile AtomicReference<T> reference = new AtomicReference<T>();
+class DefaultInvocationHandler<T> implements InvocationHandler, ServiceListener {
+    private final AtomicReference<T> reference = new AtomicReference<>();
     private final Supplier<T> supplier;
     private final Consumer<T> serviceAvailableHook;
     private ServiceReference<?> currentServiceReference;
 
-    SmartSwitch(final Supplier<T> pSupplier, final Consumer<T> pServiceAvailableHook) {
+    DefaultInvocationHandler(final Supplier<T> pSupplier, final Consumer<T> pServiceAvailableHook) {
         assert pSupplier != null : "pSupplier cannot be null";
         assert pServiceAvailableHook != null : "pServiceAvailableHook cannot be null";
         supplier = pSupplier;
         serviceAvailableHook = pServiceAvailableHook;
     }
 
-    private T getService(final ServiceReference<?> pRef) {
-        return (T)pRef.getBundle().getBundleContext().getService(pRef);
+    private T getService(final ServiceReference<T> pRef) {
+        return pRef.getBundle().getBundleContext().getService(pRef);
     }
 
-    public synchronized void initService(final ServiceReference<?> pRefOrNull) {
+    public synchronized void initService(final ServiceReference<T> pRefOrNull) {
         if (null != pRefOrNull && null == currentServiceReference ) {
             final T serviceOrNull = getService(pRefOrNull);
             if (serviceOrNull != null) {
@@ -58,10 +71,11 @@ final class SmartSwitch<T> implements InvocationHandler, ServiceListener {
         return (Integer) ranking;
     }
 
+    @SuppressWarnings("unchecked")
     public synchronized void serviceChanged(final ServiceEvent event) {
         switch (event.getType()) {
             case ServiceEvent.REGISTERED: {
-                final ServiceReference<?> sref = event.getServiceReference();
+                final ServiceReference<T> sref = (ServiceReference<T>)event.getServiceReference();
                 if (getRanking(sref) > getCurrentRanking()) {
                     final T previous = reference.getAndSet(getService(sref));
                     assert previous != null : "previous cannot be null";

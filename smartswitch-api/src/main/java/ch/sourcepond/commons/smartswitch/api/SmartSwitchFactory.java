@@ -18,8 +18,10 @@ import java.util.function.Supplier;
  * Factory to create a smart-switch between a regular OSGi service and a fallback service if the former service
  * is not available.
  */
+@SuppressWarnings("unused")
 public interface SmartSwitchFactory {
 
+    @SuppressWarnings("unused")
     interface ProxyFactory<T> {
 
         T instead();
@@ -50,6 +52,7 @@ public interface SmartSwitchFactory {
      *
      * @param <T> The service type
      */
+    @SuppressWarnings("unused")
     interface FilteredFallbackSupplierRegistrar<T> extends FallbackSupplierRegistrar<T> {
 
         /**
