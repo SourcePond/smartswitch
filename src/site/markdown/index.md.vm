@@ -10,4 +10,40 @@ to a default service again. This is useful if you want to have the possibility t
 bundle at any time. For instance suppose, you were using an ExecutorService in your bundle. In most environments, it
 uses a default instantiated by your bundle. Now, you have special environment where you want to deploy your bundle,
 and, this environment does not allow to create your own ExecutorServices. In this case, you are required to use an
-ExecutorService provided by that special environment.
+ExecutorService provided by that special environment, but, on all other environments you want to stick with the default.
+In such a situation SmartSwitch can help to easily make your bundle work in any circumstance.
+
+$h2 Dependencies
+SmartSwitch bundles are available from Maven Central. If you want to use SmartSwitch in your own project, you need to
+add following dependency to the POM:
+
+```
+<dependency>
+    <groupId>ch.sourcepond.commons</groupId>
+    <artifactId>smartswitch-api</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
+
+Additionally, following bundle needs to be installed in your OSGi environment on runtime.
+
+```
+<dependency>
+	<!-- Only needed on runtime <scope>runtime</scope> -->
+    <groupId>ch.sourcepond.commons</groupId>
+    <artifactId>smartswitch-impl</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
+
+
+Alternatively, there is also a [Karaf](http://karaf.apache.org/) feature available which contains anything needed at
+runtime:
+
+```
+<dependency>
+    <groupId>ch.sourcepond.commons</groupId>
+    <artifactId>smartswitch-feature</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```

@@ -28,6 +28,7 @@
         <module>smartswitch-api</module>
         <module>smartswitch-impl</module>
         <module>smartswitch-tests</module>
+        <module>smartswitch-feature</module>
     </modules>
 
     <properties>
