@@ -1,0 +1,13 @@
+#set($h1 = '#')
+#set($h2 = '##')
+#set($h3 = '###')
+#set($h4 = '####')
+
+$h1 Quick Overview
+SmartSwitch is a simple OSGi service which is able to create service-proxies. Those proxies delegate to a default
+service or to an OSGi service when it becomes available. If the OSGi service disappears the smart proxy will delegate
+to a default service again. This is useful if you want to have the possibility to replace a default component in your
+bundle at any time. For instance suppose, you were using an ExecutorService in your bundle. In most environments, it
+uses a default instantiated by your bundle. Now, you have special environment where you want to deploy your bundle,
+and, this environment does not allow to create your own ExecutorServices. In this case, you are required to use an
+ExecutorService provided by that special environment.
