@@ -14,7 +14,7 @@ import ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory;
 import org.osgi.framework.InvalidSyntaxException;
 
 /**
- * Created by rolandhauser on 23.12.16.
+ * Implementation class of the {@code withFilter} part of the fluent configuration API.
  */
 final class DefaultFilteredFallbackSupplierRegistrar<T> extends DefaultFallbackSupplierRegistrar<T>
         implements SmartSwitchFactory.FilteredFallbackSupplierRegistrar<T> {
@@ -23,6 +23,7 @@ final class DefaultFilteredFallbackSupplierRegistrar<T> extends DefaultFallbackS
         super(pVisitor);
     }
 
+    @Override
     public SmartSwitchFactory.FallbackSupplierRegistrar<T> withFilter(final String pFilter) {
         if (pFilter == null) {
             throw new NullPointerException("Filter specified is null");

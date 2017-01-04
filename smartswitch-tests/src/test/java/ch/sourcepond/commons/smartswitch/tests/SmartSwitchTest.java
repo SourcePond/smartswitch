@@ -5,9 +5,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -23,7 +20,7 @@ import static org.mockito.Mockito.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
 /**
- * Created by rolandhauser on 03.01.17.
+ * Integration test for SmartSwitch bundle.
  */
 @RunWith(PaxExam.class)
 public class SmartSwitchTest {
@@ -35,9 +32,11 @@ public class SmartSwitchTest {
 
     private final CountDownLatch latch = new CountDownLatch(1);
 
+    @SuppressWarnings("CanBeFinal")
     @Inject
     private SmartSwitchFactory smartSwitchFactory;
 
+    @SuppressWarnings("CanBeFinal")
     @Inject
     private BundleContext context;
 
@@ -74,7 +73,7 @@ public class SmartSwitchTest {
         ExecutorService service = smartSwitchFactory.whenService(ExecutorService.class).withFilter(
                 FILTER).isUnavailableThenUse(
                 () -> defaultService).insteadAndObserveAvailability(
-                e -> e.shutdown());
+                ExecutorService::shutdown);
 
         service.isTerminated();
         verify(defaultService).isTerminated();
@@ -84,14 +83,11 @@ public class SmartSwitchTest {
         props.put("testService", "true");
         final ServiceRegistration<ExecutorService> registration = context.registerService(ExecutorService.class, osgiService, props);
 
-        Thread.sleep(500);
         service.isTerminated();
         verify(defaultService).shutdown();
         verify(osgiService).isTerminated();
 
         registration.unregister();
-
-        Thread.sleep(500);
         verify(osgiService, never()).shutdown();
 
         service.isTerminated();

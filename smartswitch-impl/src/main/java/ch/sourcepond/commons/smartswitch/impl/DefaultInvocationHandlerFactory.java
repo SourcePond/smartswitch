@@ -14,11 +14,11 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Created by rolandhauser on 03.01.17.
+ * Factory class to create {@link DefaultInvocationHandler} instances.
  */
 class DefaultInvocationHandlerFactory {
 
-    public <T> DefaultInvocationHandler<T> createHandler(final Supplier<T> pSupplier, final Consumer<T> pServiceAvailableHook) {
+    <T> DefaultInvocationHandler<T> createHandler(final Supplier<T> pSupplier, final Consumer<T> pServiceAvailableHook) {
         return new DefaultInvocationHandler<>(pSupplier, pServiceAvailableHook);
     }
 }

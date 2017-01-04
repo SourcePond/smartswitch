@@ -20,40 +20,43 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Created by rolandhauser on 23.12.16.
+ * Visitor which is passed around to gather all information necessary for building the SmartSwitch proxy.
+ * This class is also the default implementation of the {@link SmartSwitchFactory.ProxyFactory} interface.
  */
 class ConfigurationVisitor<T> implements SmartSwitchFactory.ProxyFactory<T> {
     private static final String TYPE_FILTER = "(" + Constants.OBJECTCLASS + "=%s)";
     private static final String COMPOUND_FILTER = "(&%s%s)";
-    final Consumer<T> defaultConsumer = t -> {};
+    private final Consumer<T> defaultConsumer;
     private final DefaultInvocationHandlerFactory factory;
     private Bundle clientBundle;
     private Supplier<T> supplier;
     private String filterOrNull;
     private Class<T> serviceInterface;
 
-    public ConfigurationVisitor(final DefaultInvocationHandlerFactory pFactory) {
+    ConfigurationVisitor(final DefaultInvocationHandlerFactory pFactory, final Consumer<T> pDefaultConsumer) {
         assert pFactory != null : "pFactory is null";
+        assert pDefaultConsumer != null : "pDefaultConsumer is null";
         factory = pFactory;
+        defaultConsumer = pDefaultConsumer;
     }
 
-    public void setClientBundle(final Bundle clientBundle) {
+    void setClientBundle(final Bundle clientBundle) {
         this.clientBundle = clientBundle;
     }
 
-    public void setSupplier(final Supplier<T> supplier) {
+    void setSupplier(final Supplier<T> supplier) {
         this.supplier = supplier;
     }
 
-    public void setFilterOrNull(final String filterOrNull) {
+    void setFilterOrNull(final String filterOrNull) {
         this.filterOrNull = filterOrNull;
     }
 
-    public void setServiceInterface(final Class<T> serviceInterface) {
+    void setServiceInterface(final Class<T> serviceInterface) {
         this.serviceInterface = serviceInterface;
     }
 
-    public BundleContext getBundleContext() {
+    BundleContext getBundleContext() {
         return clientBundle.getBundleContext();
     }
 
@@ -75,7 +78,7 @@ class ConfigurationVisitor<T> implements SmartSwitchFactory.ProxyFactory<T> {
             }
 
             handler.initService(refOrNull);
-        } catch (InvalidSyntaxException e) {
+        } catch (final InvalidSyntaxException e) {
             // This should never happen because DefaultFilteredFallbackSupplierRegistrar#withFilter
             // had validated that the filter supplied is valid
             throw new IllegalStateException(e.getMessage(), e);
@@ -84,10 +87,12 @@ class ConfigurationVisitor<T> implements SmartSwitchFactory.ProxyFactory<T> {
                 new Class<?>[]{serviceInterface}, handler);
     }
 
+    @Override
     public T instead() {
         return createProxy(defaultConsumer);
     }
 
+    @Override
     public T insteadAndObserveAvailability(final Consumer<T> pConsumer) {
         if (pConsumer == null) {
             throw new NullPointerException("Consumer specified is null!");

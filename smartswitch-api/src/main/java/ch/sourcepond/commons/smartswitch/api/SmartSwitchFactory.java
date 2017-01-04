@@ -21,11 +21,31 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public interface SmartSwitchFactory {
 
+    /**
+     * Instances of this interface are capable to create SmartSwitch proxies.
+     *
+     * @param <T> The service type
+     */
     @SuppressWarnings("unused")
     interface ProxyFactory<T> {
 
+        /**
+         * Creates the proxy which automatically switches between the default service and the appropriate OSGi service
+         * when it becomes available.
+         *
+         * @return Service proxy, never {@code null}
+         */
         T instead();
 
+        /**
+         * Creates the proxy which automatically switches between the default service and the appropriate OSGi service
+         * when it becomes available. The hook specified is executed when the switch to an appropriate OSGi service
+         * is done and takes the <em>default service</em> as only argument.
+         *
+         * @param pConsumer Hook which should be executed when an OSGi service becomes available,
+         *                  must not be {@code null}
+         * @return Service proxy, never {@code null}
+         */
         T insteadAndObserveAvailability(Consumer<T> pConsumer);
     }
 

@@ -14,23 +14,29 @@ import ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory;
 import org.osgi.framework.*;
 
 /**
- * Created by rolandhauser on 23.12.16.
+ * The bundle activator which exports the {@link SmartSwitchFactory} service. Because the classloaders from the
+ * the consuming bundles are needed, we export a {@link ServiceFactory} instead. This allows to export a customized
+ * service for each requesting bundle.
  */
 @SuppressWarnings("WeakerAccess")
 public class Activator implements BundleActivator, ServiceFactory<SmartSwitchFactory> {
 
+    @Override
     public void start(final BundleContext context) throws Exception {
         context.registerService(SmartSwitchFactory.class, this, null);
     }
 
+    @Override
     public void stop(final BundleContext context) throws Exception {
         // noop, service unregistration is done automatically
     }
 
+    @Override
     public SmartSwitchFactory getService(final Bundle bundle, final ServiceRegistration<SmartSwitchFactory> registration) {
         return new DefaultSmartSwitchFactory(bundle);
     }
 
+    @Override
     public void ungetService(final Bundle bundle, final ServiceRegistration<SmartSwitchFactory> registration, final SmartSwitchFactory service) {
         // noop
     }

@@ -15,16 +15,17 @@ import ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory;
 import java.util.function.Supplier;
 
 /**
- * Created by rolandhauser on 23.12.16.
+ * Implementation class for the {@code isUnavailableThenUse} part of the fluent configuration API.
  */
 class DefaultFallbackSupplierRegistrar<T> implements SmartSwitchFactory.FallbackSupplierRegistrar<T> {
     final ConfigurationVisitor<T> visitor;
 
-    public DefaultFallbackSupplierRegistrar(final ConfigurationVisitor<T> pVisitor) {
+    DefaultFallbackSupplierRegistrar(final ConfigurationVisitor<T> pVisitor) {
         assert pVisitor != null : "pVisitor cannot be null";
         visitor = pVisitor;
     }
 
+    @Override
     public SmartSwitchFactory.ProxyFactory<T> isUnavailableThenUse(final Supplier<T> pSupplier) {
         if (pSupplier == null) {
             throw new NullPointerException("Supplier specified is null");

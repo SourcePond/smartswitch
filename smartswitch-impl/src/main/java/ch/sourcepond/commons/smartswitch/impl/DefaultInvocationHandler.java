@@ -22,7 +22,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Created by rolandhauser on 23.12.16.
+ * Implementation of the SmartSwitch logic. This class actually switches between a default service and an OSGi service
+ * when it becomes available.
  */
 class DefaultInvocationHandler<T> implements InvocationHandler, ServiceListener {
     private final AtomicReference<T> reference = new AtomicReference<>();
@@ -37,12 +38,13 @@ class DefaultInvocationHandler<T> implements InvocationHandler, ServiceListener 
         serviceAvailableHook = pServiceAvailableHook;
     }
 
-    private T getService(final ServiceReference<T> pRef) {
-        return pRef.getBundle().getBundleContext().getService(pRef);
+    @SuppressWarnings("unchecked")
+    private T getService(final ServiceReference<?> pRef) {
+        return (T) pRef.getBundle().getBundleContext().getService(pRef);
     }
 
-    public synchronized void initService(final ServiceReference<T> pRefOrNull) {
-        if (null != pRefOrNull && null == currentServiceReference ) {
+    synchronized void initService(final ServiceReference<T> pRefOrNull) {
+        if (null != pRefOrNull && null == currentServiceReference) {
             final T serviceOrNull = getService(pRefOrNull);
             if (serviceOrNull != null) {
                 currentServiceReference = pRefOrNull;
@@ -55,6 +57,7 @@ class DefaultInvocationHandler<T> implements InvocationHandler, ServiceListener 
         }
     }
 
+    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         return method.invoke(reference.get(), args);
     }
@@ -71,32 +74,45 @@ class DefaultInvocationHandler<T> implements InvocationHandler, ServiceListener 
         return (Integer) ranking;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public synchronized void serviceChanged(final ServiceEvent event) {
         switch (event.getType()) {
             case ServiceEvent.REGISTERED: {
-                final ServiceReference<T> sref = (ServiceReference<T>)event.getServiceReference();
-                if (getRanking(sref) > getCurrentRanking()) {
-                    final T previous = reference.getAndSet(getService(sref));
-                    assert previous != null : "previous cannot be null";
-
-                    // If the previously held service was a default service.
-                    if (currentServiceReference == null) {
-                        serviceAvailableHook.accept(previous);
-                    }
-
-                    // Remember current reference
-                    currentServiceReference = sref;
-                }
+                switchService(event);
                 break;
             }
             case ServiceEvent.MODIFIED_ENDMATCH:
             case ServiceEvent.UNREGISTERING: {
-                if (event.getServiceReference().equals(currentServiceReference)) {
-                    reference.set(supplier.get());
-                    currentServiceReference = null;
-                }
+                switchToDefault(event);
+                break;
             }
+            default: {
+                // noop
+            }
+        }
+    }
+
+    private void switchToDefault(final ServiceEvent event) {
+        if (event.getServiceReference().equals(currentServiceReference)) {
+            reference.set(supplier.get());
+            currentServiceReference = null;
+        }
+    }
+
+    private void switchService(final ServiceEvent event) {
+        final ServiceReference<?> serviceReference = event.getServiceReference();
+        if (getRanking(serviceReference) > getCurrentRanking()) {
+            final T previous = reference.getAndSet(getService(serviceReference));
+            assert previous != null : "previous cannot be null";
+
+            // If the previously held service was a default service.
+            if (currentServiceReference == null) {
+                serviceAvailableHook.accept(previous);
+            }
+
+            // Remember current reference
+            currentServiceReference = serviceReference;
         }
     }
 }

@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Created by rolandhauser on 03.01.17.
+ * Test for {@link ConfigurationVisitor}
  */
 @SuppressWarnings("unchecked")
 public class ConfigurationVisitorTest {
@@ -41,7 +41,8 @@ public class ConfigurationVisitorTest {
     private final Consumer<ExecutorService> availabilityHook = mock(Consumer.class);
     private final DefaultInvocationHandlerFactory factory = mock(DefaultInvocationHandlerFactory.class);
     private final DefaultInvocationHandler<ExecutorService> handler = mock(DefaultInvocationHandler.class);
-    private final ConfigurationVisitor<ExecutorService> visitor = new ConfigurationVisitor<>(factory);
+    private final Consumer<ExecutorService> defaultConsumer = mock(Consumer.class);
+    private final ConfigurationVisitor<ExecutorService> visitor = new ConfigurationVisitor<>(factory, defaultConsumer);
 
     @Before
     public void setup() {
@@ -66,7 +67,7 @@ public class ConfigurationVisitorTest {
 
     @Test
     public void createProxy() throws Exception {
-        when(factory.createHandler(supplier, visitor.defaultConsumer)).thenReturn(handler);
+        when(factory.createHandler(supplier, defaultConsumer)).thenReturn(handler);
         final ExecutorService proxy = visitor.instead();
         assertNotNull(proxy);
         verifyInit();
@@ -75,7 +76,7 @@ public class ConfigurationVisitorTest {
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @Test
     public void createProxyServiceAlreadyAvailable() throws Exception {
-        when(factory.createHandler(supplier, visitor.defaultConsumer)).thenReturn(handler);
+        when(factory.createHandler(supplier, defaultConsumer)).thenReturn(handler);
         final ServiceReference<ExecutorService> ref = mock(ServiceReference.class);
         when(context.getServiceReferences(ExecutorService.class, EXPECTED_COMPOUND_FILTER)).thenReturn(asList(ref));
         final ExecutorService proxy = visitor.instead();
@@ -88,7 +89,7 @@ public class ConfigurationVisitorTest {
     @Test
     public void createProxyNoCustomFilterSet() throws Exception {
         visitor.setFilterOrNull(null);
-        when(factory.createHandler(supplier, visitor.defaultConsumer)).thenReturn(handler);
+        when(factory.createHandler(supplier, defaultConsumer)).thenReturn(handler);
         final ExecutorService proxy = visitor.instead();
         assertNotNull(proxy);
         verifyInit("(objectClass=java.util.concurrent.ExecutorService)");
@@ -109,7 +110,7 @@ public class ConfigurationVisitorTest {
 
     @Test
     public void filterSuppliedIsNotValid() throws Exception {
-        when(factory.createHandler(supplier, visitor.defaultConsumer)).thenReturn(handler);
+        when(factory.createHandler(supplier, defaultConsumer)).thenReturn(handler);
         final InvalidSyntaxException expected = new InvalidSyntaxException("", "");
         doThrow(expected).when(context).addServiceListener(same(handler), anyString());
         try {
