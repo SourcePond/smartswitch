@@ -1,0 +1,1 @@
+See https://sourcepond.ch/ch.sourcepond.commons/smartswitch/1.0-SNAPSHOT for further information.
