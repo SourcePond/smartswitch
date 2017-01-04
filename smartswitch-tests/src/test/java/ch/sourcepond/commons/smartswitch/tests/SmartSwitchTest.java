@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.mockito.Mockito.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
@@ -70,9 +71,11 @@ public class SmartSwitchTest {
 
     @Test
     public void verifyServiceSwitch() throws Exception {
+        Executors.newCachedThreadPool();
+
         ExecutorService service = smartSwitchFactory.whenService(ExecutorService.class).withFilter(
                 FILTER).isUnavailableThenUse(
-                () -> defaultService).insteadAndObserveAvailability(
+                () -> defaultService).insteadAndExecuteWhenAvailable(
                 ExecutorService::shutdown);
 
         service.isTerminated();

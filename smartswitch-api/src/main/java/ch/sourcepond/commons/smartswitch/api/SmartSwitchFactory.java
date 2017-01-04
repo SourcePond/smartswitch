@@ -46,7 +46,7 @@ public interface SmartSwitchFactory {
          *                  must not be {@code null}
          * @return Service proxy, never {@code null}
          */
-        T insteadAndObserveAvailability(Consumer<T> pConsumer);
+        T insteadAndExecuteWhenAvailable(Consumer<T> pConsumer);
     }
 
     /**

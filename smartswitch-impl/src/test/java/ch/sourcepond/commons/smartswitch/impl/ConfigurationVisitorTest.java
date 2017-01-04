@@ -98,14 +98,14 @@ public class ConfigurationVisitorTest {
     @Test
     public void createProxyWithCustomAvailabilityHook() throws Exception {
         when(factory.createHandler(supplier, availabilityHook)).thenReturn(handler);
-        final ExecutorService proxy = visitor.insteadAndObserveAvailability(availabilityHook);
+        final ExecutorService proxy = visitor.insteadAndExecuteWhenAvailable(availabilityHook);
         assertNotNull(proxy);
         verifyInit();
     }
 
     @Test(expected = NullPointerException.class)
     public void hookIsNull() {
-        visitor.insteadAndObserveAvailability(null);
+        visitor.insteadAndExecuteWhenAvailable(null);
     }
 
     @Test

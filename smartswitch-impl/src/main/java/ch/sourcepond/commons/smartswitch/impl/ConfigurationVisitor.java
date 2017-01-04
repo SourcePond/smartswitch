@@ -93,7 +93,7 @@ class ConfigurationVisitor<T> implements SmartSwitchFactory.ProxyFactory<T> {
     }
 
     @Override
-    public T insteadAndObserveAvailability(final Consumer<T> pConsumer) {
+    public T insteadAndExecuteWhenAvailable(final Consumer<T> pConsumer) {
         if (pConsumer == null) {
             throw new NullPointerException("Consumer specified is null!");
         }

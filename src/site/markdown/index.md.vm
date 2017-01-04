@@ -47,3 +47,39 @@ runtime:
     <version>${project.version}</version>
 </dependency>
 ```
+
+$h2 Usage
+In order to work with SmartSwitch, you need to inject following service to you your bundle:
+
+```
+ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory
+```
+
+This can be done in any way your OSGi environment may support (plain plumbing, Blueprint, Declarative Services etc.).
+After you have injected the service at the appropriate place, you can use its fluent API to specify a smart-switch:
+
+```
+import ch.sourcepond.commons.smartswitch.api.SmartSwitchFactory;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+
+public class MyComponent {
+    private FileSystem fs;
+    private ExecutorService executor;
+
+    public MyComponent(SmartSwitchFactory ssf) {
+        // Import the file-system if available otherwise use the system default
+        fs = ssf.whenService(FileSystem.class).isUnavailableThenUse(() -> FileSystems.getDefault());
+
+        // Import the executor with the filter specified if available. If not, use a cached executor service,
+        // and, shut it down if an appropriate OSGi service becomes available.
+        executor = ssf.whenService(ExecutorService.class).withFilter("(name=foo.bar)").isUnavailableThenUse(
+                        () -> Executors.newCachedThreadPool()).insteadAndExecuteWhenAvailable(ExecutorService::shutdown);
+    }
+
+}
+```
+
+
