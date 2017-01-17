@@ -29,6 +29,7 @@
         <module>smartswitch-impl</module>
         <module>smartswitch-tests</module>
         <module>smartswitch-feature</module>
+        <module>smartswitch-testing</module>
     </modules>
 
     <properties>
