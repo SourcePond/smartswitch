@@ -5,8 +5,7 @@
 
 $h1 Quick Overview
 SmartSwitch is a simple library which is used in conjunction with [Felix Dependency Manager](http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html).
-It creates proxies which delegate to a default service or to an OSGi service when it becomes available.
-service or to an OSGi service when it becomes available. If the OSGi service disappears the smart proxy will delegate
+It creates proxies which delegate to a default service or to an OSGi service when it becomes available. If the OSGi service disappears, the smart proxy will delegate
 to a default service again. This is useful if you want to have the possibility to replace a default component in your
 bundle at any time.
 
@@ -15,10 +14,6 @@ uses a default instantiated by your bundle. Now, you have special environment wh
 and, this environment does not allow to create your own ExecutorServices. In this case, you are required to use an
 ExecutorService provided by that special environment, but, on all other environments you want to stick with the default.
 In such a situation SmartSwitch can help to easily make your bundle work in any circumstance.
-
-$h2 Requirements
-Java: ${java.version}
-OSGi: ${org.osgi.core.version}
 
 $h2 Dependencies
 SmartSwitch bundles are available from Maven Central. If you want to use SmartSwitch in your own project, you need to
@@ -35,7 +30,7 @@ add following dependency to the POM:
 Additionally, you need to have [Felix Dependency Manager](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22org.apache.felix.dependencymanager%22)
 installed in your OSGi environment on runtime.
 
-Alternatively, there is also a [Karaf](http://karaf.apache.org/) feature available which contains anything needed at
+Alternatively, there is also a [Karaf](http://karaf.apache.org/) feature available which contains anything necessary on
 runtime:
 
 ```
