@@ -18,6 +18,8 @@ import org.junit.Test;
 import org.mockito.InOrder;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.*;
@@ -27,6 +29,7 @@ import static org.mockito.Mockito.*;
  */
 public class SmartSwitchTest {
     private static final Object[] ARGS = new Object[0];
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final ServiceChangeObserver<TestService> observer = mock(ServiceChangeObserver.class);
     private final Supplier<TestService> supplier = mock(Supplier.class);
     private final ShutdownHook<TestService> shutdownHook = mock(ShutdownHook.class);
@@ -34,7 +37,7 @@ public class SmartSwitchTest {
     private final TestService testService1 = mock(TestService.class);
     private final TestService testService2 = mock(TestService.class);
     private final TestService testService3 = mock(TestService.class);
-    private  SmartSwitch<TestService> smartSwitch = new SmartSwitchFactory().create(supplier, null, observer);
+    private  SmartSwitch<TestService> smartSwitch = new SmartSwitchFactory(executorService).create(supplier, null, observer);
     private Method method;
 
     @Before
@@ -43,12 +46,16 @@ public class SmartSwitchTest {
         method = TestService.class.getMethod("testMethod");
     }
 
+    public void tearDown() {
+        executorService.shutdown();
+    }
+
     @Test
     public void callShutdownHookIfAvailable() throws Throwable {
-        smartSwitch = new SmartSwitchFactory().create(supplier, shutdownHook, observer);
+        smartSwitch = new SmartSwitchFactory(executorService).create(supplier, shutdownHook, observer);
         smartSwitch.invoke(null, method, ARGS);
         smartSwitch.serviceAdded(testService1);
-        verify(shutdownHook).shutdown(suppliedService);
+        verify(shutdownHook, timeout(1000)).shutdown(suppliedService);
     }
 
     @Test
@@ -61,13 +68,13 @@ public class SmartSwitchTest {
     public void verifyNoExceptionWhenShutdownFails() throws Throwable {
         final Exception e = new Exception();
         doThrow(e).when(shutdownHook).shutdown(suppliedService);
-        smartSwitch = new SmartSwitch<>(supplier, shutdownHook, observer);
+        smartSwitch = new SmartSwitchFactory(executorService).create(supplier, shutdownHook, observer);
         smartSwitch.invoke(null, method, ARGS);
 
         // This should not throw an exception
         smartSwitch.serviceAdded(testService1);
 
-        verify(shutdownHook).shutdown(suppliedService);
+        verify(shutdownHook, timeout(1000)).shutdown(suppliedService);
     }
 
     @Test

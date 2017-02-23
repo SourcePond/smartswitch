@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -32,12 +33,15 @@ class SmartSwitch<T> implements InvocationHandler {
     private final Supplier<T> supplier;
     private final ShutdownHook<T> shutdownHookOrNull;
     private final ServiceChangeObserver<T> observerOrNull;
+    private final ExecutorService executorService;
     private boolean defaultInitialized;
     private volatile T current;
 
-    SmartSwitch(final Supplier<T> pSupplier,
+    SmartSwitch(final ExecutorService pExecutorService,
+                final Supplier<T> pSupplier,
                 final ShutdownHook<T> pShutdownHookOrNull,
                 final ServiceChangeObserver<T> pObserverOrNull) {
+        executorService = pExecutorService;
         supplier = pSupplier;
         shutdownHookOrNull = pShutdownHookOrNull;
         observerOrNull = pObserverOrNull;
@@ -45,7 +49,7 @@ class SmartSwitch<T> implements InvocationHandler {
 
     private void informObserver(final T pPrevious, final T pCurrent) {
         if (observerOrNull != null) {
-            observerOrNull.serviceChanged(pPrevious, pCurrent);
+            executorService.execute(() -> observerOrNull.serviceChanged(pPrevious, pCurrent));
         }
     }
 
@@ -54,23 +58,23 @@ class SmartSwitch<T> implements InvocationHandler {
         final T previous = current;
         current = pService;
 
-        if (defaultInitialized) {
-            try {
-                if (shutdownHookOrNull != null) {
+        if (defaultInitialized && shutdownHookOrNull != null) {
+            executorService.execute(() -> {
+                try {
                     shutdownHookOrNull.shutdown(stack.removeFirst());
+                } catch (final Exception e) {
+                    LOG.warn(e.getMessage(), e);
+                } finally {
+                    defaultInitialized = false;
                 }
-            } catch (final Exception e) {
-                LOG.warn(e.getMessage(), e);
-            } finally {
-                defaultInitialized = false;
-            }
+            });
         }
 
         informObserver(previous, pService);
     }
 
     public synchronized void serviceRemoved(final T pService) {
-        while (stack.removeFirstOccurrence(pService));
+        while (stack.removeFirstOccurrence(pService)) ;
         if (stack.isEmpty()) {
             current = null;
         } else {

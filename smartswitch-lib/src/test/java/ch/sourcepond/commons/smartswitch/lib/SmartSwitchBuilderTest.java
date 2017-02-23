@@ -21,6 +21,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Proxy;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 import static ch.sourcepond.commons.smartswitch.lib.SmartSwitchBuilderImpl.SERVICE_ADDED;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.*;
  */
 public class SmartSwitchBuilderTest {
     private static final String ANY_FILTER = "anyFilter";
+    private final ExecutorService executorService = mock(ExecutorService.class);
     private final ServiceChangeObserver<TestService> observer = mock(ServiceChangeObserver.class);
     private final DependencyActivatorBase activator = mock(DependencyActivatorBase.class);
     private final ShutdownHook<TestService> shutdownHook = mock(ShutdownHook.class);
@@ -41,7 +43,7 @@ public class SmartSwitchBuilderTest {
     private final TestService testService = mock(TestService.class);
     private final Supplier<TestService> supplier = mock(Supplier.class);
     private final SmartSwitch<TestService> smartSwitch = mock(SmartSwitch.class);
-    private final SmartSwitchBuilder<TestService> builder = new SmartSwitchBuilderImpl<>(factory, activator, TestService.class);
+    private final SmartSwitchBuilder<TestService> builder = new SmartSwitchBuilderImpl<>(executorService, factory, activator, TestService.class);
 
     @Before
     public void setup() {
@@ -93,10 +95,5 @@ public class SmartSwitchBuilderTest {
     public void buildWithoutFilter() {
         assertSame(dependency, builder.build(supplier));
         verify(dependency).setService(TestService.class);
-    }
-
-    @Test
-    public void verifyCreate() {
-        assertNotNull(SmartSwitchBuilder.create(activator, TestService.class));
     }
 }

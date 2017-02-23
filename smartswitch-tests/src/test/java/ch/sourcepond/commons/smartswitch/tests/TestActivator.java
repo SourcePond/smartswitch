@@ -13,26 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.tests;
 
-import org.apache.felix.dm.DependencyActivatorBase;
+import ch.sourcepond.commons.smartswitch.lib.SmartSwitchActivatorBase;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.BundleContext;
 
 import java.util.concurrent.ExecutorService;
 
-import static ch.sourcepond.commons.smartswitch.lib.SmartSwitchBuilder.create;
 import static java.lang.Thread.currentThread;
 import static org.mockito.Mockito.mock;
 
 /**
  *
  */
-public class TestActivator extends DependencyActivatorBase {
+public class TestActivator extends SmartSwitchActivatorBase {
     private static final Object MUTEX = new Object();
     static volatile ExecutorService smartSwitchService;
     static volatile ExecutorService defaultService;
     private static ExecutorService smartSwitchedService;
-    private volatile ServiceDependency delegateDependency;
 
     @Override
     public void init(final BundleContext bundleContext, final DependencyManager dependencyManager) throws Exception {
@@ -42,7 +39,7 @@ public class TestActivator extends DependencyActivatorBase {
 
         dependencyManager.add(
                 createComponent().add(
-                        create(this, ExecutorService.class).
+                        createSmartSwitchBuilder(ExecutorService.class).
                                 setObserver((p, c) -> setSmartSwitchedService(c)).
                                 setFilter("(testexecutor=*)").
                                 setShutdownHook(e -> e.shutdown()).

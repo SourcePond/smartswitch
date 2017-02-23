@@ -17,6 +17,7 @@ import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.ServiceDependency;
 
 import java.lang.reflect.Proxy;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -28,11 +29,13 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
     private final SmartSwitchFactory smartSwitchFactory;
     private final DependencyActivatorBase activator;
     private final Class<T> serviceInterface;
+    private final ExecutorService executorService;
     private volatile String filter;
     private volatile ServiceChangeObserver<T> observerOrNull;
     private volatile ShutdownHook shutdownHookOrNull;
 
-    SmartSwitchBuilderImpl(final SmartSwitchFactory pSmartSwitchFactory, final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
+    SmartSwitchBuilderImpl(final ExecutorService pExecutorService, final SmartSwitchFactory pSmartSwitchFactory, final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
+        executorService = pExecutorService;
         smartSwitchFactory = pSmartSwitchFactory;
         activator = pActivator;
         serviceInterface = pServiceInterface;

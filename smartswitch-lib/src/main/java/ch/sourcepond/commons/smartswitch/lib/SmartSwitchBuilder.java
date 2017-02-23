@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.lib;
 
-import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.ServiceDependency;
 
 import java.util.function.Supplier;
@@ -23,15 +22,26 @@ import java.util.function.Supplier;
  */
 public interface SmartSwitchBuilder<T> {
 
+    /**
+     * Sets the observer specified on the service-proxy. When a service gets added or removed
+     * the observer will be informed <em>asychronously</em>. If the observer specified is
+     * {@code null}, nothing happens
+     *
+     * @param pObserver Observer to set on the service proxy.
+     * @return This builder, never {@code null}.
+     */
     SmartSwitchBuilder<T> setObserver(ServiceChangeObserver<T> pObserver);
 
+    /**
+     * If specified, the service-proxy will filter potential services. If the filter
+     * specified is {@code null}, nothing happens.
+     *
+     * @param pFilter Valid OSGi service filter.
+     * @return This builder, never {@code null}.
+     */
     SmartSwitchBuilder<T> setFilter(String pFilter);
 
     ServiceDependency build(Supplier<T> pSupplier);
 
     SmartSwitchBuilder<T> setShutdownHook(ShutdownHook<T> pShutdownHook);
-
-    static <T> SmartSwitchBuilder<T> create(final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
-        return new SmartSwitchBuilderImpl<T>(new SmartSwitchFactory(), pActivator, pServiceInterface);
-    }
 }

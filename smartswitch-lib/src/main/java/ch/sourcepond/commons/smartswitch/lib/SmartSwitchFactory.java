@@ -13,16 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.lib;
 
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
  *
  */
 class SmartSwitchFactory {
+    private final ExecutorService executorService;
+
+    SmartSwitchFactory(final ExecutorService pExecutorService) {
+        executorService = pExecutorService;
+    }
 
     <T> SmartSwitch<T> create(final Supplier<T> pSupplier,
                               final ShutdownHook<T> pShutdownHookOrNull,
                               final ServiceChangeObserver<T> pObserverOrNull) {
-        return new SmartSwitch<T>(pSupplier, pShutdownHookOrNull, pObserverOrNull);
+        return new SmartSwitch<T>(executorService, pSupplier, pShutdownHookOrNull, pObserverOrNull);
     }
 }
