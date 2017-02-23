@@ -76,6 +76,7 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
             throw new NullPointerException("Supplier is null");
         }
         final ServiceDependency result = activator.createServiceDependency();
+        result.setDereference(false);
         if (filter == null) {
             result.setService(serviceInterface);
         } else {

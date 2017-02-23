@@ -92,7 +92,6 @@
             <scope>test</scope>
             <groupId>ch.sourcepond.testing</groupId>
             <artifactId>bundle-test-support</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <scope>test</scope>
