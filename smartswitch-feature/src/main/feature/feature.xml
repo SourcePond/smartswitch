@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="smartswitch">
+    <feature name="smartswitch-feature" description="smartswitch-feature">
+        <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.dependencymanager/${org.apache.felix.dependencymanager.version}</bundle>
+    </feature>
+</features>
