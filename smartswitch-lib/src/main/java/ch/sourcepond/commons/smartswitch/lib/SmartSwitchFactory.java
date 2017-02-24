@@ -30,6 +30,6 @@ class SmartSwitchFactory {
     <T> SmartSwitch<T> create(final Supplier<T> pSupplier,
                               final Consumer<T> pShutdownHookOrNull,
                               final ToDefaultSwitchObserver<T> pObserverOrNull) {
-        return new SmartSwitch<T>(executorService, pSupplier, pShutdownHookOrNull, pObserverOrNull);
+        return new SmartSwitch<>(executorService, pSupplier, pShutdownHookOrNull, pObserverOrNull);
     }
 }

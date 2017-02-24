@@ -18,7 +18,6 @@ import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.InvalidSyntaxException;
 
 import java.lang.reflect.Proxy;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -32,19 +31,17 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
     private final SmartSwitchFactory smartSwitchFactory;
     private final DependencyActivatorBase activator;
     private final Class<T> serviceInterface;
-    private final ExecutorService executorService;
     private volatile String filterOrNull;
     private volatile ToDefaultSwitchObserver<T> observerOrNull;
     private volatile Consumer<T> shutdownHookOrNull;
 
-    SmartSwitchBuilderImpl(final ExecutorService pExecutorService, final SmartSwitchFactory pSmartSwitchFactory, final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
-        executorService = pExecutorService;
+    SmartSwitchBuilderImpl(final SmartSwitchFactory pSmartSwitchFactory, final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
         smartSwitchFactory = pSmartSwitchFactory;
         activator = pActivator;
         serviceInterface = pServiceInterface;
     }
 
-    private T createProxy(final Supplier<T> pSupplier, final SmartSwitch<T> pSmartSwitch) {
+    private T createProxy(final SmartSwitch<T> pSmartSwitch) {
         return (T) Proxy.newProxyInstance(
                 activator.getClass().getClassLoader(),
                 new Class<?>[]{serviceInterface},
@@ -107,6 +104,6 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
             throw new IllegalStateException(e.getMessage(), e);
         }
 
-        return result.setDefaultImplementation(createProxy(pSupplier, smartSwitch));
+        return result.setDefaultImplementation(createProxy(smartSwitch));
     }
 }
