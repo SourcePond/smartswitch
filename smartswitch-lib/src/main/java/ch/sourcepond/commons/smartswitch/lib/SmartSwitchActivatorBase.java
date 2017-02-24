@@ -33,6 +33,6 @@ public abstract class SmartSwitchActivatorBase extends DependencyActivatorBase {
     }
 
     protected <T> SmartSwitchBuilder<T> createSmartSwitchBuilder(final Class<T> pServiceInterface) {
-        return new SmartSwitchBuilderImpl<>(executorService, new SmartSwitchFactory(executorService), this, pServiceInterface);
+        return new SmartSwitchBuilderImpl<T>(new SmartSwitchFactory(executorService), this, pServiceInterface);
     }
 }
