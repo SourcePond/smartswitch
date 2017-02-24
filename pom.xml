@@ -23,7 +23,7 @@
     <artifactId>smartswitch</artifactId>
     <inceptionYear>2017</inceptionYear>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <modules>
         <module>smartswitch-lib</module>
         <module>smartswitch-tests</module>

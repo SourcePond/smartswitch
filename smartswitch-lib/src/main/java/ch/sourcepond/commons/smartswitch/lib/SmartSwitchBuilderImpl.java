@@ -15,24 +15,27 @@ package ch.sourcepond.commons.smartswitch.lib;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.ServiceDependency;
+import org.osgi.framework.InvalidSyntaxException;
 
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static org.osgi.framework.Constants.OBJECTCLASS;
 
 /**
  *
  */
 final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
-    static final String SERVICE_ADDED = "serviceAdded";
-    static final String SERVICE_REMOVED = "serviceRemoved";
     private final SmartSwitchFactory smartSwitchFactory;
     private final DependencyActivatorBase activator;
     private final Class<T> serviceInterface;
     private final ExecutorService executorService;
-    private volatile String filter;
-    private volatile ServiceChangeObserver<T> observerOrNull;
-    private volatile ShutdownHook shutdownHookOrNull;
+    private volatile String filterOrNull;
+    private volatile ToDefaultSwitchObserver<T> observerOrNull;
+    private volatile Consumer<T> shutdownHookOrNull;
 
     SmartSwitchBuilderImpl(final ExecutorService pExecutorService, final SmartSwitchFactory pSmartSwitchFactory, final DependencyActivatorBase pActivator, final Class<T> pServiceInterface) {
         executorService = pExecutorService;
@@ -49,24 +52,37 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
     }
 
     @Override
-    public SmartSwitchBuilder<T> setObserver(final ServiceChangeObserver<T> pObserver) {
+    public SmartSwitchBuilder<T> setObserver(final ToDefaultSwitchObserver<T> pObserver) {
         observerOrNull = pObserver;
         return this;
     }
 
     @Override
     public SmartSwitchBuilder<T> setFilter(final String pFilter) {
-        filter = pFilter;
+        // Check that the filter specified is valid
+        try {
+            activator.getBundleContext().createFilter(pFilter);
+        } catch (final InvalidSyntaxException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+        filterOrNull = pFilter;
         return this;
     }
 
     @Override
-    public SmartSwitchBuilder<T> setShutdownHook(final ShutdownHook<T> pShutdownHook) {
+    public SmartSwitchBuilder<T> setShutdownHook(final Consumer<T> pShutdownHook) {
         if (pShutdownHook == null) {
             throw new NullPointerException("ShutdownHook is null");
         }
         shutdownHookOrNull = pShutdownHook;
         return this;
+    }
+
+    private String createServiceFilter() {
+        if (filterOrNull == null) {
+            return format("(%s=%s)", OBJECTCLASS, serviceInterface.getName());
+        }
+        return format("(&(%s=%s)%s)", OBJECTCLASS, serviceInterface.getName(), filterOrNull);
     }
 
     @Override
@@ -77,13 +93,20 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
         }
         final ServiceDependency result = activator.createServiceDependency();
         result.setDereference(false);
-        if (filter == null) {
+        if (filterOrNull == null) {
             result.setService(serviceInterface);
         } else {
-            result.setService(serviceInterface, filter);
+            result.setService(serviceInterface, filterOrNull);
         }
         final SmartSwitch<T> smartSwitch = smartSwitchFactory.create(pSupplier, shutdownHookOrNull, observerOrNull);
-        return result.setCallbacks(smartSwitch, SERVICE_ADDED, SERVICE_REMOVED).
-                setDefaultImplementation(createProxy(pSupplier, smartSwitch));
+        try {
+            activator.getBundleContext().addServiceListener(smartSwitch, createServiceFilter());
+        } catch (final InvalidSyntaxException e) {
+            // This should never happen because it has been validated
+            // that the filter specified by the user is valid.
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+
+        return result.setDefaultImplementation(createProxy(pSupplier, smartSwitch));
     }
 }

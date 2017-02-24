@@ -13,91 +13,80 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.lib;
 
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.osgi.framework.ServiceEvent.REGISTERED;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  *
  */
-class SmartSwitch<T> implements InvocationHandler {
+class SmartSwitch<T> implements InvocationHandler, ServiceListener {
     private static final Logger LOG = getLogger(SmartSwitch.class);
-    private final Deque<T> stack = new ArrayDeque<>();
     private final Supplier<T> supplier;
-    private final ShutdownHook<T> shutdownHookOrNull;
-    private final ServiceChangeObserver<T> observerOrNull;
+    private final Consumer<T> shutdownHookOrNull;
+    private final ToDefaultSwitchObserver<T> observerOrNull;
     private final ExecutorService executorService;
-    private boolean defaultInitialized;
-    private volatile T current;
+    private volatile T defaultService;
 
     SmartSwitch(final ExecutorService pExecutorService,
                 final Supplier<T> pSupplier,
-                final ShutdownHook<T> pShutdownHookOrNull,
-                final ServiceChangeObserver<T> pObserverOrNull) {
+                final Consumer<T> pShutdownHookOrNull,
+                final ToDefaultSwitchObserver<T> pObserverOrNull) {
         executorService = pExecutorService;
         supplier = pSupplier;
         shutdownHookOrNull = pShutdownHookOrNull;
         observerOrNull = pObserverOrNull;
     }
 
-    private void informObserver(final T pPrevious, final T pCurrent) {
+    private void informObserver() {
         if (observerOrNull != null) {
-            executorService.execute(() -> observerOrNull.serviceChanged(pPrevious, pCurrent));
+            executorService.execute(() -> observerOrNull.defaultInitialized(defaultService));
         }
     }
 
-    public synchronized void serviceAdded(final T pService) {
-        stack.offer(pService);
-        final T previous = current;
-        current = pService;
-
-        if (defaultInitialized && shutdownHookOrNull != null) {
-            executorService.execute(() -> {
-                try {
-                    shutdownHookOrNull.shutdown(stack.removeFirst());
-                } catch (final Exception e) {
-                    LOG.warn(e.getMessage(), e);
-                } finally {
-                    defaultInitialized = false;
-                }
-            });
+    @Override
+    public void serviceChanged(final ServiceEvent event) {
+        if (REGISTERED == event.getType()) {
+            shutdownDefaultService();
         }
-
-        informObserver(previous, pService);
     }
 
-    public synchronized void serviceRemoved(final T pService) {
-        while (stack.removeFirstOccurrence(pService)) ;
-        if (stack.isEmpty()) {
-            current = null;
-        } else {
-            current = stack.getLast();
+    private synchronized void shutdownDefaultService() {
+        if (defaultService != null) {
+            if (shutdownHookOrNull != null) {
+                final T toBeShutdown = defaultService;
+                executorService.execute(() -> {
+                    try {
+                        shutdownHookOrNull.accept(toBeShutdown);
+                    } catch (final Exception e) {
+                        LOG.warn(e.getMessage(), e);
+                    }
+                });
+            }
+            defaultService = null;
         }
-
-        informObserver(pService, current);
     }
 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
-        T obj = current;
+        T obj = defaultService;
 
         // Double-check is working properly since Java 5.0
         if (obj == null) { // First check (no locking)
             synchronized (this) {
-                obj = current;
+                obj = defaultService;
                 if (obj == null) { // Second check (with locking)
-                    current = obj = supplier.get();
-                    defaultInitialized = true;
-                    stack.addFirst(obj);
-
-                    informObserver(null, obj);
+                    defaultService = obj = supplier.get();
+                    informObserver();
                 }
             }
         }

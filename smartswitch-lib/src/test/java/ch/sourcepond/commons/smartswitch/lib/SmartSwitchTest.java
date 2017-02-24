@@ -15,14 +15,17 @@ package ch.sourcepond.commons.smartswitch.lib;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InOrder;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceReference;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.*;
+import static org.osgi.framework.ServiceEvent.REGISTERED;
 
 /**
  *
@@ -30,13 +33,11 @@ import static org.mockito.Mockito.*;
 public class SmartSwitchTest {
     private static final Object[] ARGS = new Object[0];
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final ServiceChangeObserver<TestService> observer = mock(ServiceChangeObserver.class);
+    private final ServiceReference<ExecutorService> ref = mock(ServiceReference.class);
+    private final ToDefaultSwitchObserver<TestService> observer = mock(ToDefaultSwitchObserver.class);
     private final Supplier<TestService> supplier = mock(Supplier.class);
-    private final ShutdownHook<TestService> shutdownHook = mock(ShutdownHook.class);
+    private final Consumer<TestService> shutdownHook = mock(Consumer.class);
     private final TestService suppliedService = mock(TestService.class);
-    private final TestService testService1 = mock(TestService.class);
-    private final TestService testService2 = mock(TestService.class);
-    private final TestService testService3 = mock(TestService.class);
     private  SmartSwitch<TestService> smartSwitch = new SmartSwitchFactory(executorService).create(supplier, null, observer);
     private Method method;
 
@@ -54,54 +55,26 @@ public class SmartSwitchTest {
     public void callShutdownHookIfAvailable() throws Throwable {
         smartSwitch = new SmartSwitchFactory(executorService).create(supplier, shutdownHook, observer);
         smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceAdded(testService1);
-        verify(shutdownHook, timeout(1000)).shutdown(suppliedService);
+        smartSwitch.serviceChanged(new ServiceEvent(REGISTERED, ref));
+        verify(shutdownHook, timeout(1000)).accept(suppliedService);
     }
 
     @Test
     public void verifyServiceRemovedButInvocationHandlerNeverCalled() {
         // This should not cause an exception to be thrown
-        smartSwitch.serviceRemoved(testService1);
+        smartSwitch.serviceChanged(new ServiceEvent(REGISTERED, ref));
     }
 
     @Test
     public void verifyNoExceptionWhenShutdownFails() throws Throwable {
-        final Exception e = new Exception();
-        doThrow(e).when(shutdownHook).shutdown(suppliedService);
+        final RuntimeException e = new RuntimeException();
+        doThrow(e).when(shutdownHook).accept(suppliedService);
         smartSwitch = new SmartSwitchFactory(executorService).create(supplier, shutdownHook, observer);
         smartSwitch.invoke(null, method, ARGS);
 
         // This should not throw an exception
-        smartSwitch.serviceAdded(testService1);
+        smartSwitch.serviceChanged(new ServiceEvent(REGISTERED, ref));
 
-        verify(shutdownHook, timeout(1000)).shutdown(suppliedService);
-    }
-
-    @Test
-    public void addRemoveService() throws Throwable {
-        smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceAdded(testService1);
-        smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceAdded(testService2);
-        smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceAdded(testService3);
-        smartSwitch.invoke(null, method, ARGS);
-
-        smartSwitch.serviceRemoved(testService3);
-        smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceRemoved(testService2);
-        smartSwitch.invoke(null, method, ARGS);
-        smartSwitch.serviceRemoved(testService1);
-        smartSwitch.invoke(null, method, ARGS);
-
-
-        final InOrder order = inOrder(suppliedService, testService1, testService2, testService3);
-        order.verify(suppliedService).testMethod();
-        order.verify(testService1).testMethod();
-        order.verify(testService2).testMethod();
-        order.verify(testService3).testMethod();
-        order.verify(testService2).testMethod();
-        order.verify(testService1).testMethod();
-        order.verify(suppliedService).testMethod();
+        verify(shutdownHook, timeout(1000)).accept(suppliedService);
     }
 }

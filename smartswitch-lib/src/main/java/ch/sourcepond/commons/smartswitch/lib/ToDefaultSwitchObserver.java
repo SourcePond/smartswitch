@@ -17,7 +17,7 @@ package ch.sourcepond.commons.smartswitch.lib;
  *
  */
 @FunctionalInterface
-public interface ServiceChangeObserver<T> {
+public interface ToDefaultSwitchObserver<T> {
 
-    void serviceChanged(T pPreviousOrNull, T pCurrent);
+    void defaultInitialized(T pDefaultService);
 }

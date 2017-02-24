@@ -15,6 +15,7 @@ package ch.sourcepond.commons.smartswitch.lib;
 
 import org.apache.felix.dm.ServiceDependency;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -30,7 +31,7 @@ public interface SmartSwitchBuilder<T> {
      * @param pObserver Observer to set on the service proxy.
      * @return This builder, never {@code null}.
      */
-    SmartSwitchBuilder<T> setObserver(ServiceChangeObserver<T> pObserver);
+    SmartSwitchBuilder<T> setObserver(ToDefaultSwitchObserver<T> pObserver);
 
     /**
      * If specified, the service-proxy will filter potential services. If the filter
@@ -43,5 +44,5 @@ public interface SmartSwitchBuilder<T> {
 
     ServiceDependency build(Supplier<T> pSupplier);
 
-    SmartSwitchBuilder<T> setShutdownHook(ShutdownHook<T> pShutdownHook);
+    SmartSwitchBuilder<T> setShutdownHook(Consumer<T> pShutdownHook);
 }

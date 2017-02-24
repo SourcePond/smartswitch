@@ -14,6 +14,7 @@ limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.tests;
 
 import ch.sourcepond.commons.smartswitch.lib.SmartSwitchActivatorBase;
+import ch.sourcepond.commons.smartswitch.lib.ToDefaultSwitchObserver;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 
@@ -27,40 +28,25 @@ import static org.mockito.Mockito.mock;
  */
 public class TestActivator extends SmartSwitchActivatorBase {
     private static final Object MUTEX = new Object();
-    static volatile ExecutorService smartSwitchService;
+    static final TestComponent COMPONENT = new TestComponent();
     static volatile ExecutorService defaultService;
-    private static ExecutorService smartSwitchedService;
+    static volatile ToDefaultSwitchObserver<ExecutorService> observer;
 
     @Override
     public void init(final BundleContext bundleContext, final DependencyManager dependencyManager) throws Exception {
-        // This is necessary to make Mockito work
+        // Necessary for Mockito
         currentThread().setContextClassLoader(getClass().getClassLoader());
         defaultService = mock(ExecutorService.class);
+        observer = mock(ToDefaultSwitchObserver.class);
 
         dependencyManager.add(
-                createComponent().add(
+                createComponent().
+                        setImplementation(COMPONENT).add(
                         createSmartSwitchBuilder(ExecutorService.class).
-                                setObserver((p, c) -> setSmartSwitchedService(c)).
+                                setObserver(observer).
                                 setFilter("(testexecutor=*)").
                                 setShutdownHook(e -> e.shutdown()).
                                 build(() -> defaultService)
                 ));
-    }
-
-    public static void setSmartSwitchedService(final ExecutorService pService) {
-        synchronized (MUTEX) {
-            smartSwitchedService = pService;
-            MUTEX.notifyAll();
-        }
-    }
-
-    public static ExecutorService getSmartSwitchedService(int pTimeout) throws InterruptedException {
-        synchronized (MUTEX) {
-            long timeout = System.currentTimeMillis() + pTimeout;
-            while (timeout > System.currentTimeMillis()) {
-                MUTEX.wait(1000);
-            }
-            return smartSwitchedService;
-        }
     }
 }

@@ -24,6 +24,7 @@ import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 import javax.inject.Inject;
@@ -31,10 +32,13 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 
+import static ch.sourcepond.commons.smartswitch.tests.TestActivator.COMPONENT;
+import static ch.sourcepond.commons.smartswitch.tests.TestActivator.defaultService;
+import static ch.sourcepond.commons.smartswitch.tests.TestActivator.observer;
 import static ch.sourcepond.testing.OptionsHelper.mockitoBundles;
 import static ch.sourcepond.testing.OptionsHelper.tinyBundles;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static java.lang.Thread.sleep;
+import static org.mockito.Mockito.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
@@ -57,6 +61,8 @@ public class SmartSwitchTest {
     @Inject
     private BundleContext context;
 
+    private Integer ranking = 0;
+
     @ProbeBuilder
     public TestProbeBuilder probeBuilder(final TestProbeBuilder pDefaultProbeBuilder) {
         return new TestProbeBuilderAdapter(pDefaultProbeBuilder);
@@ -78,21 +84,35 @@ public class SmartSwitchTest {
     }
 
     private ServiceRegistration<ExecutorService> registerService(final ExecutorService pExpected) throws InterruptedException {
-        final Hashtable<String, String> props = new Hashtable<>();
+        final Hashtable<String, Object> props = new Hashtable<>();
         props.put("testexecutor", "true");
+        props.put(Constants.SERVICE_RANKING, ranking++);
         final ServiceRegistration<ExecutorService> reg = context.registerService(ExecutorService.class, pExpected, props);
-        assertSame(pExpected, TestActivator.getSmartSwitchedService(2000));
+        sleep(1000);
+        COMPONENT.execute(runnable);
+        verify(pExpected).execute(runnable);
         return reg;
     }
 
     @Test
-    public void verifyServiceSwitch() throws Exception {
+    public void verifyInformObserver() throws Exception {
+        COMPONENT.execute(runnable);
+        verify(defaultService, times(1)).execute(runnable);
+        verify(observer, timeout(1000)).defaultInitialized(defaultService);
+    }
+
+    @Test
+    public void verifySmartSwitch() throws Exception {
+        COMPONENT.execute(runnable);
         final ServiceRegistration reg1 = registerService(realExecutor1);
+        verify(defaultService).shutdown();
         final ServiceRegistration reg2 = registerService(realExecutor2);
         final ServiceRegistration reg3 = registerService(realExecutor3);
         reg3.unregister();
         reg2.unregister();
         reg1.unregister();
-        assertNull(TestActivator.getSmartSwitchedService(2000));
+        COMPONENT.execute(runnable);
+        verify(defaultService, times(2)).execute(runnable);
+        verifyNoMoreInteractions(defaultService);
     }
 }

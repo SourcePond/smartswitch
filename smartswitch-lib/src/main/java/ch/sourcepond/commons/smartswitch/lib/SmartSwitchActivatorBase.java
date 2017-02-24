@@ -16,7 +16,7 @@ package ch.sourcepond.commons.smartswitch.lib;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.osgi.framework.BundleContext;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
@@ -24,13 +24,7 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
  *
  */
 public abstract class SmartSwitchActivatorBase extends DependencyActivatorBase {
-    private volatile ExecutorService executorService;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        executorService = newCachedThreadPool();
-        super.start(context);
-    }
+    final ExecutorService executorService = newCachedThreadPool();
 
     @Override
     public void stop(final BundleContext context) throws Exception {

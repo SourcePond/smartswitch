@@ -19,13 +19,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static ch.sourcepond.commons.smartswitch.lib.SmartSwitchBuilderImpl.SERVICE_ADDED;
-import static ch.sourcepond.commons.smartswitch.lib.SmartSwitchBuilderImpl.SERVICE_REMOVED;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -33,11 +34,12 @@ import static org.mockito.Mockito.*;
  *
  */
 public class SmartSwitchBuilderTest {
-    private static final String ANY_FILTER = "anyFilter";
+    private static final String ANY_FILTER = "(someproperty=*)";
     private final ExecutorService executorService = mock(ExecutorService.class);
-    private final ServiceChangeObserver<TestService> observer = mock(ServiceChangeObserver.class);
+    private final ToDefaultSwitchObserver<TestService> observer = mock(ToDefaultSwitchObserver.class);
+    private final BundleContext context = mock(BundleContext.class);
     private final DependencyActivatorBase activator = mock(DependencyActivatorBase.class);
-    private final ShutdownHook<TestService> shutdownHook = mock(ShutdownHook.class);
+    private final Consumer<TestService> shutdownHook = mock(Consumer.class);
     private final ServiceDependency dependency = mock(ServiceDependency.class);
     private final SmartSwitchFactory factory = mock(SmartSwitchFactory.class);
     private final TestService testService = mock(TestService.class);
@@ -47,9 +49,9 @@ public class SmartSwitchBuilderTest {
 
     @Before
     public void setup() {
+        when(activator.getBundleContext()).thenReturn(context);
         when(factory.create(supplier, null, observer)).thenReturn(smartSwitch);
         when(activator.createServiceDependency()).thenReturn(dependency);
-        when(dependency.setCallbacks(smartSwitch, SERVICE_ADDED, SERVICE_REMOVED)).thenReturn(dependency);
         when(dependency.setDefaultImplementation(Mockito.argThat(new ArgumentMatcher<Object>() {
             @Override
             public boolean matches(final Object o) {
@@ -57,14 +59,6 @@ public class SmartSwitchBuilderTest {
             }
         }))).thenReturn(dependency);
         builder.setObserver(observer);
-    }
-
-    @Test
-    public void verifyCallbacks() throws Exception {
-        SmartSwitch.class.getDeclaredMethod(SERVICE_ADDED, Object.class).invoke(smartSwitch, testService);
-        SmartSwitch.class.getDeclaredMethod(SERVICE_REMOVED, Object.class).invoke(smartSwitch, testService);
-        verify(smartSwitch).serviceAdded(testService);
-        verify(smartSwitch).serviceRemoved(testService);
     }
 
     @Test(expected = NullPointerException.class)
@@ -78,6 +72,32 @@ public class SmartSwitchBuilderTest {
     }
 
     @Test
+    public void setInvalidFilter() throws Exception {
+        final InvalidSyntaxException expected = new InvalidSyntaxException("",ANY_FILTER);
+        doThrow(expected).when(context).createFilter(ANY_FILTER);
+        try {
+            builder.setFilter(ANY_FILTER);
+            fail("Exception expected here");
+        } catch (final IllegalArgumentException e) {
+            assertSame(expected, e.getCause());
+        }
+    }
+
+    // This case should never happen because the filter has been
+    // validated before build can be called.
+    @Test
+    public void buildWithInvalidFilter() throws Exception {
+        final InvalidSyntaxException expected = new InvalidSyntaxException("",ANY_FILTER);
+        doThrow(expected).when(context).addServiceListener(same(smartSwitch), anyString());
+        try {
+            builder.build(supplier);
+            fail("Exception expected here");
+        } catch (final IllegalStateException e) {
+            assertSame(expected, e.getCause());
+        }
+    }
+
+    @Test
     public void buildWithShutdownHook() {
         when(factory.create(supplier, shutdownHook, observer)).thenReturn(smartSwitch);
         builder.setShutdownHook(shutdownHook);
@@ -85,15 +105,17 @@ public class SmartSwitchBuilderTest {
     }
 
     @Test
-    public void build() {
+    public void build() throws Exception {
         builder.setFilter(ANY_FILTER);
         assertSame(dependency, builder.build(supplier));
+        verify(context).addServiceListener(smartSwitch, "(&(objectClass=ch.sourcepond.commons.smartswitch.lib.TestService)(someproperty=*))");
         verify(dependency).setService(TestService.class, ANY_FILTER);
     }
 
     @Test
-    public void buildWithoutFilter() {
+    public void buildWithoutFilter() throws Exception {
         assertSame(dependency, builder.build(supplier));
+        verify(context).addServiceListener(smartSwitch, "(objectClass=ch.sourcepond.commons.smartswitch.lib.TestService)");
         verify(dependency).setService(TestService.class);
     }
 }
