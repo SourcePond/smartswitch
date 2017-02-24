@@ -45,7 +45,7 @@ public class SmartSwitchBuilderTest {
     private final TestService testService = mock(TestService.class);
     private final Supplier<TestService> supplier = mock(Supplier.class);
     private final SmartSwitch<TestService> smartSwitch = mock(SmartSwitch.class);
-    private final SmartSwitchBuilder<TestService> builder = new SmartSwitchBuilderImpl<>(executorService, factory, activator, TestService.class);
+    private final SmartSwitchBuilder<TestService> builder = new SmartSwitchBuilderImpl<>(factory, activator, TestService.class);
 
     @Before
     public void setup() {
