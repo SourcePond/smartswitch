@@ -15,6 +15,7 @@ package ch.sourcepond.commons.smartswitch.tests;
 
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import ch.sourcepond.testing.OptionsHelper;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +24,8 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -32,9 +35,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 
-import static ch.sourcepond.commons.smartswitch.tests.TestActivator.COMPONENT;
-import static ch.sourcepond.commons.smartswitch.tests.TestActivator.defaultService;
-import static ch.sourcepond.commons.smartswitch.tests.TestActivator.observer;
+import static ch.sourcepond.commons.smartswitch.tests.TestActivator.*;
 import static ch.sourcepond.testing.OptionsHelper.mockitoBundles;
 import static ch.sourcepond.testing.OptionsHelper.tinyBundles;
 import static java.lang.Thread.sleep;
@@ -46,6 +47,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
  * Integration test for SmartSwitch bundle.
  */
 @RunWith(PaxExam.class)
+@ExamReactorStrategy(PerSuite.class)
 public class SmartSwitchTest {
     private static final String TEST_BUNDLE_KEY = "testBundle";
 
@@ -83,6 +85,11 @@ public class SmartSwitchTest {
         )};
     }
 
+    @After
+    public void resetStaticMocks() {
+        reset(defaultService, observer);
+    }
+
     private ServiceRegistration<ExecutorService> registerService(final ExecutorService pExpected) throws InterruptedException {
         final Hashtable<String, Object> props = new Hashtable<>();
         props.put("testexecutor", "true");
@@ -92,13 +99,6 @@ public class SmartSwitchTest {
         COMPONENT.execute(runnable);
         verify(pExpected).execute(runnable);
         return reg;
-    }
-
-    @Test
-    public void verifyInformObserver() throws Exception {
-        COMPONENT.execute(runnable);
-        verify(defaultService, times(1)).execute(runnable);
-        verify(observer, timeout(1000)).defaultInitialized(defaultService);
     }
 
     @Test
@@ -113,6 +113,7 @@ public class SmartSwitchTest {
         reg1.unregister();
         COMPONENT.execute(runnable);
         verify(defaultService, times(2)).execute(runnable);
+        verify(observer, times(2)).defaultInitialized(defaultService);
         verifyNoMoreInteractions(defaultService);
     }
 }
