@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static org.osgi.framework.Constants.OBJECTCLASS;
 
 /**
@@ -85,9 +86,7 @@ final class SmartSwitchBuilderImpl<T> implements SmartSwitchBuilder<T> {
     @Override
     public ServiceDependency build(final Supplier<T> pSupplier) {
         // The supplier cannot be null otherwise fail here
-        if (pSupplier == null) {
-            throw new NullPointerException("Supplier is null");
-        }
+        requireNonNull(pSupplier, "Supplier is null");
         final ServiceDependency result = activator.createServiceDependency();
         result.setDereference(false);
         if (filterOrNull == null) {
