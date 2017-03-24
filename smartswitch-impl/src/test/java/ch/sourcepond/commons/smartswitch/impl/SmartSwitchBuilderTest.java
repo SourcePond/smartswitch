@@ -45,14 +45,17 @@ public class SmartSwitchBuilderTest {
     private final TestService testService = mock(TestService.class);
     private final Supplier<TestService> supplier = mock(Supplier.class);
     private final SmartSwitch<TestService> smartSwitch = mock(SmartSwitch.class);
-    private final SmartSwitchBuilder<TestService> builder = new SmartSwitchBuilderImpl<>(factory, executorService, context, TestService.class);
+    private final SmartSwitchBuilderFactoryImpl builderFactory = new SmartSwitchBuilderFactoryImpl(bundle, executorService, factory);
+    private SmartSwitchBuilder<TestService> builder;
 
     @Before
     public void setup() {
+        when(bundle.getBundleContext()).thenReturn(context);
         when(context.getBundle()).thenReturn(bundle);
         when(bundle.adapt(BundleWiring.class)).thenReturn(wiring);
         when(wiring.getClassLoader()).thenReturn(getClass().getClassLoader());
         when(factory.create(executorService, supplier, null, observer)).thenReturn(smartSwitch);
+        builder = builderFactory.newBuilder(TestService.class);
         builder.setObserver(observer);
     }
 

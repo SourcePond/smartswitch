@@ -20,7 +20,13 @@ public class ActivatorTest {
     private final SmartSwitchFactory factory = mock(SmartSwitchFactory.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Bundle bundle = mock(Bundle.class);
-    private final Activator activator = new Activator(executor, factory);
+    private  Activator activator = new Activator(executor, factory);
+
+    @Test
+    public void verifyDefaultConstructor() throws Exception {
+        activator = new Activator();
+        activator.stop(context);
+    }
 
     @Test
     public void startStop() throws Exception {
