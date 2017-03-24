@@ -12,7 +12,7 @@
     <inceptionYear>2017</inceptionYear>
     <groupId>ch.sourcepond.commons</groupId>
     <artifactId>smartswitch-tests</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>4.0-SNAPSHOT</version>
     <description>
         OSGi integration tests for SmartSwitch.
     </description>
@@ -52,6 +52,12 @@
         </dependency>
         <dependency>
             <scope>runtime</scope>
+            <groupId>ch.sourcepond.commons</groupId>
+            <artifactId>smartswitch-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
             <groupId>biz.aQute.bnd</groupId>
             <artifactId>biz.aQute.bndlib</artifactId>
         </dependency>
@@ -80,7 +86,7 @@
         <dependency>
             <scope>test</scope>
             <groupId>ch.sourcepond.commons</groupId>
-            <artifactId>smartswitch-lib</artifactId>
+            <artifactId>smartswitch-felixdmlib</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

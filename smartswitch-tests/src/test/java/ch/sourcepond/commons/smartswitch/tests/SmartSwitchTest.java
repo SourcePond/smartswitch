@@ -77,7 +77,7 @@ public class SmartSwitchTest {
                         .artifactId("smartswitch-feature")
                         .classifier("features")
                         .type("xml")
-                        .versionAsInProject(), "smartswitch-feature"
+                        .versionAsInProject(), "smartswitch-felixdmlib-feature"
                 )),
                 mockitoBundles(),
                 tinyBundles(),

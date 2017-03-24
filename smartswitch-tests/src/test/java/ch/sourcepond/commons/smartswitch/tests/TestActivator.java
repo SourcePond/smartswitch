@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.commons.smartswitch.tests;
 
-import ch.sourcepond.commons.smartswitch.lib.SmartSwitchActivatorBase;
-import ch.sourcepond.commons.smartswitch.lib.ToDefaultSwitchObserver;
+import ch.sourcepond.commons.smartswitch.api.ToDefaultSwitchObserver;
+import ch.sourcepond.commons.smartswitch.felixdmlib.SmartSwitchActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 

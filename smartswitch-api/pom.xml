@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <!-- Licensed to the Apache Software Foundation (ASF) under one or more
         contributor license agreements. See the NOTICE file distributed with this
         work for additional information regarding copyright ownership. The ASF licenses
@@ -13,38 +12,22 @@
         OR CONDITIONS OF ANY KIND, either express or implied. See the License for
         the specific language governing permissions and limitations under the License. -->
     <parent>
-        <groupId>ch.sourcepond</groupId>
-        <artifactId>bundle</artifactId>
-        <version>0.7.5</version>
-        <relativePath />
+        <groupId>ch.sourcepond.commons</groupId>
+        <artifactId>smartswitch</artifactId>
+        <version>4.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>ch.sourcepond.commons</groupId>
-    <artifactId>smartswitch</artifactId>
-    <inceptionYear>2017</inceptionYear>
-    <packaging>pom</packaging>
-    <version>4.0-SNAPSHOT</version>
-    <modules>
-        <module>smartswitch-api</module>
-        <module>smartswitch-impl</module>
-        <module>smartswitch-felixdmlib</module>
-        <module>smartswitch-tests</module>
-        <module>smartswitch-feature</module>
-    </modules>
+    <artifactId>smartswitch-api</artifactId>
+    <packaging>bundle</packaging>
 
-    <properties>
-        <repo.project>${project.artifactId}</repo.project>
-    </properties>
-
-    <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
-    <url>https://sourcepond.github.io/${repo.project}</url>
-
-    <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
-    <scm>
-        <url>https://${repo.domain}/${repo.path}</url>
-        <connection>scm:git:${project.scm.url}.git</connection>
-        <developerConnection>scm:git:ssh://git@${repo.domain}/${repo.path}.git</developerConnection>
-    </scm>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
     <ciManagement>
         <url>${jenkins.baseurl}/job/${project.artifactId}</url>
@@ -58,3 +41,4 @@
         </site>
     </distributionManagement>
 </project>
+
