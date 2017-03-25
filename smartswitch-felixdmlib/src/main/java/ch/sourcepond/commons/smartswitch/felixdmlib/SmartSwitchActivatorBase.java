@@ -75,18 +75,18 @@ public abstract class SmartSwitchActivatorBase extends DependencyActivatorBase i
         return factory;
     }
 
-    private void resetFactory() {
+    private synchronized  void resetFactory() {
         factory = null;
     }
 
-    private void initFactory(ServiceReference<?> pRef) {
+    private synchronized  void initFactory(ServiceReference<?> pRef) {
         final BundleContext context = pRef.getBundle().getBundleContext();
         factory = context.getService((ServiceReference<SmartSwitchBuilderFactory>) pRef);
         notifyAll();
     }
 
     @Override
-    public synchronized void serviceChanged(final ServiceEvent pEvent) {
+    public void serviceChanged(final ServiceEvent pEvent) {
         final ServiceReference<?> ref = pEvent.getServiceReference();
         switch (pEvent.getType()) {
             case UNREGISTERING:
