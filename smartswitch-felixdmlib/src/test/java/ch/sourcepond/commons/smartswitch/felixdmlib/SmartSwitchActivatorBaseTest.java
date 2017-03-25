@@ -33,6 +33,7 @@ import static java.util.concurrent.Executors.newScheduledThreadPool;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.osgi.framework.ServiceEvent.MODIFIED;
 import static org.osgi.framework.ServiceEvent.REGISTERED;
 import static org.osgi.framework.ServiceEvent.UNREGISTERING;
 
@@ -116,6 +117,14 @@ public class SmartSwitchActivatorBaseTest {
         activator.start(context);
         verifyStart();
         assertSame(builderFactory, activator.getFactory());
+    }
+
+    @Test
+    public void ignoreUnhandledEventType() {
+        final ServiceEvent event = new ServiceEvent(MODIFIED, factoryRef);
+        setupServiceReference();
+        activator.serviceChanged(event);
+        verifyZeroInteractions(context);
     }
 
     @Test

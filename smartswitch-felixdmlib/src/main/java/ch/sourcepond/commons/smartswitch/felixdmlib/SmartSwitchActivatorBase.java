@@ -19,6 +19,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 
@@ -32,6 +34,7 @@ import static org.osgi.framework.ServiceEvent.*;
  *
  */
 public abstract class SmartSwitchActivatorBase extends DependencyActivatorBase implements ServiceListener {
+    private static final Logger LOG = LoggerFactory.getLogger(SmartSwitchActivatorBase.class);
     private static final long DEFAULT_TIMEOUT = 30000L;
     private SmartSwitchBuilderFactory factory;
     private final long timeout;
@@ -72,24 +75,36 @@ public abstract class SmartSwitchActivatorBase extends DependencyActivatorBase i
         return factory;
     }
 
+    private void resetFactory() {
+        factory = null;
+    }
+
+    private void initFactory(ServiceReference<?> pRef) {
+        final BundleContext context = pRef.getBundle().getBundleContext();
+        factory = context.getService((ServiceReference<SmartSwitchBuilderFactory>) pRef);
+        notifyAll();
+    }
+
     @Override
-    public synchronized void serviceChanged(final ServiceEvent serviceEvent) {
-        final ServiceReference<?> ref = serviceEvent.getServiceReference();
-        switch (serviceEvent.getType()) {
+    public synchronized void serviceChanged(final ServiceEvent pEvent) {
+        final ServiceReference<?> ref = pEvent.getServiceReference();
+        switch (pEvent.getType()) {
             case UNREGISTERING:
             case MODIFIED_ENDMATCH: {
-                factory = null;
+                resetFactory();
                 break;
             }
             case REGISTERED: {
-                final BundleContext context = ref.getBundle().getBundleContext();
-                factory = context.getService((ServiceReference<SmartSwitchBuilderFactory>) ref);
-                notifyAll();
+                initFactory(ref);
+                break;
+            }
+            default: {
+                LOG.debug("Ignoring event with type {}", pEvent.getType());
             }
         }
     }
 
     protected <T> ServiceDependencyBuilder<T> createSmartSwitchBuilder(final Class<T> pServiceInterface) throws InterruptedException {
-        return new ServiceDependencyBuilder<T>(getFactory().newBuilder(pServiceInterface), this, pServiceInterface);
+        return new ServiceDependencyBuilder<>(getFactory().newBuilder(pServiceInterface), this, pServiceInterface);
     }
 }

@@ -16,6 +16,7 @@ package ch.sourcepond.commons.smartswitch.api;
 /**
  *
  */
+@FunctionalInterface
 public interface SmartSwitchBuilderFactory {
 
     <T> SmartSwitchBuilder<T> newBuilder(Class<T> pInterface);
