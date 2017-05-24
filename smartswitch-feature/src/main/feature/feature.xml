@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="smartswitch">
     <feature name="smartswitch-feature" description="smartswitch-feature" />
-    <feature name="smartswitch-felixdmlib-feature" description="smartswitch-feature">
-        <feature prerequisite="true">smartswitch-feature</feature>
+    <feature name="smartswitch-felixdmlib-feature" description="smartswitch-felixdmlib-feature">
+        <feature>smartswitch-feature</feature>
         <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.dependencymanager/${org.apache.felix.dependencymanager.version}</bundle>
         <bundle>mvn:ch.sourcepond.commons/smartswitch-felixdmlib/${project.version}</bundle>
     </feature>

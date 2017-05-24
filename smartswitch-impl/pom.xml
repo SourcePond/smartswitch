@@ -34,6 +34,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
+                        <Import-Package>org.slf4j;version="${slf4j-api.version}",*</Import-Package>
                         <Bundle-Activator>ch.sourcepond.commons.smartswitch.impl.Activator</Bundle-Activator>
                         <Provide-Capability>osgi.service;effective:=active;objectClass=ch.sourcepond.commons.smartswitch.api.SmartSwitchBuilderFactory</Provide-Capability>
                     </instructions>
